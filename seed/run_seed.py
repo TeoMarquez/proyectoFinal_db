@@ -6,6 +6,7 @@ from factories.create_proveedores import create_proveedores
 from factories.create_servicios import create_servicios
 from factories.create_recintos import create_recintos
 from factories.create_contratos import create_contratos
+from factories.create_subcontratos import create_subcontratos
 
 from pipeline.dump.provincias import dump_provincias
 # from pipeline.dump.ciudades import dump_ciudades (ya existente)
@@ -15,6 +16,7 @@ from pipeline.dump.proveedores import dump_proveedores
 from pipeline.dump.servicios import dump_servicios
 from pipeline.dump.recintos import dump_recintos
 from pipeline.dump.contratos import dump_contratos
+from pipeline.dump.subcontratos import dump_subcontratos
 
 SEED = 42
 TARGET_ROWS = 100_000
@@ -84,9 +86,20 @@ def main():
     contratos = create_contratos(clientes, SEED)
     dump_contratos(contratos)
     stats["contratos"] = len(contratos)
+        
+    print("[SEED] Generando subcontratos...")
+
+    subcontratos = create_subcontratos(
+        contratos,
+        servicios,
+        zonas,
+        SEED
+    )
+    dump_subcontratos(subcontratos)
+    stats["subcontratos"] = len(subcontratos)
+
     
     print_stats(stats)
-
     print("[SEED] DONE ✔")
 
 
