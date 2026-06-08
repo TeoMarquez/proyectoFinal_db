@@ -1,7 +1,7 @@
 from faker import Faker
 import random
 
-from core.generators.cuit import generate_cuit
+from pipeline.generators.cuit import generate_cuit
 
 
 def create_clientes(seed=None):
