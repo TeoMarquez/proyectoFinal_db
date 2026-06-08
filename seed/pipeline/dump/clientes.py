@@ -16,6 +16,7 @@ def dump_clientes(clientes):
         writer = csv.writer(f)
 
         writer.writerow([
+            "id",
             "nombre",
             "cuit",
             "telefono",
@@ -25,6 +26,7 @@ def dump_clientes(clientes):
         for c in clientes:
 
             writer.writerow([
+                c["id"],
                 c["nombre"],
                 c["cuit"],
                 c["telefono"],

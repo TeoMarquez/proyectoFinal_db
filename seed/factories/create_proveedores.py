@@ -1,5 +1,6 @@
 from faker import Faker
 import random
+
 from core.generators.cuit import generate_cuit
 
 
@@ -14,9 +15,10 @@ def create_proveedores(seed=None):
 
     total = rng.randint(2000, 4000)
 
-    for _ in range(total):
+    for i in range(total):
 
         proveedores.append({
+            "id": i + 1,
             "nombre": fake.company(),
             "cuit": generate_cuit(rng),
             "telefono": fake.phone_number(),

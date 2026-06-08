@@ -15,9 +15,10 @@ def create_clientes(seed=None):
 
     total = rng.randint(4000, 8000)
 
-    for _ in range(total):
+    for i in range(total):
 
         clientes.append({
+            "id": i + 1,
             "nombre": fake.company(),
             "cuit": generate_cuit(rng),
             "telefono": fake.phone_number(),

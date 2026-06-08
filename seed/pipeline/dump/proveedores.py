@@ -16,6 +16,7 @@ def dump_proveedores(proveedores):
         writer = csv.writer(f)
 
         writer.writerow([
+            "id",
             "nombre",
             "cuit",
             "telefono",
@@ -25,6 +26,7 @@ def dump_proveedores(proveedores):
         for p in proveedores:
 
             writer.writerow([
+                p["id"],
                 p["nombre"],
                 p["cuit"],
                 p["telefono"],
