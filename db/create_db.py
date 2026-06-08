@@ -6,13 +6,12 @@ conn = get_connection("master")
 cursor = conn.cursor()
 
 BASE_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = BASE_DIR.parent
 
 scripts = [
-    PROJECT_ROOT / "scripts_sql/01_schema.sql",
-    PROJECT_ROOT / "scripts_sql/02_views.sql",
-    PROJECT_ROOT / "scripts_sql/03_procedures.sql",
-    PROJECT_ROOT / "scripts_sql/04_triggers.sql",
+    BASE_DIR / "scripts_sql" / "01_schema.sql",
+    BASE_DIR / "scripts_sql" / "02_views.sql",
+    BASE_DIR / "scripts_sql" / "03_procedures.sql",
+    BASE_DIR / "scripts_sql" / "04_triggers.sql",
 ]
 
 print("\n[DB] Iniciando ejecución de scripts...\n")
