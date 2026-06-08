@@ -47,7 +47,7 @@ REFERENCES ciudad(id)
 create table cliente (
 id int IDENTITY(1,1),
 nombre varchar(50) NOT NULL,
-cuit VARCHAR(13)NOT NULL,
+cuit VARCHAR(20)NOT NULL,
 telefono VARCHAR(30),
 email VARCHAR(120),
 CONSTRAINT PK_Cliente
@@ -59,7 +59,7 @@ UNIQUE(cuit)
 create table proveedor (
 id int IDENTITY(1,1),
 nombre VARCHAR(100) NOT NULL,
-cuit VARCHAR(13) NOT NULL,
+cuit VARCHAR(20) NOT NULL,
 telefono VARCHAR(30) NOT NULL,
 email VARCHAR(120) NOT NULL,
 CONSTRAINT PK_Proveedor
@@ -196,7 +196,7 @@ CHECK(monto >= 0)
 
 create table cancelacion (
 id INT IDENTITY(1,1),
-subcontrato_id INT,
+subcontrato_id INT NULL,
 evento_id INT NOT NULL,
 detalle VARCHAR (250),
 CONSTRAINT PK_Cancelacion
@@ -209,8 +209,6 @@ FOREIGN KEY(evento_id)
 REFERENCES evento(id),
 CONSTRAINT UQ_Cancelacion_Evento
 UNIQUE(evento_id),
-CONSTRAINT UQ_Cancelacion_Subcontrato
-UNIQUE(subcontrato_id)
 );
 
 create table evaluacion_servicio (
@@ -231,3 +229,7 @@ CHECK(calificacion_costo BETWEEN 1 and 10),
 CONSTRAINT UQ_Evaluacionservicio_Subcontrato
 UNIQUE(subcontrato_id)
 );
+
+CREATE UNIQUE INDEX UX_Cancelacion_Subcontrato
+ON cancelacion(subcontrato_id)
+WHERE subcontrato_id IS NOT NULL;
