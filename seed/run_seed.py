@@ -10,7 +10,8 @@ from factories.create_subcontratos import create_subcontratos
 from factories.create_eventos import create_eventos
 from factories.create_ingresos_evento import create_ingresos_evento
 from factories.create_tickets import create_tickets
-
+from factories.create_cancelaciones import create_cancelaciones
+from factories.create_evaluaciones_servicio import create_evaluaciones_servicio
 
 from pipeline.dump.provincias import dump_provincias
 # from pipeline.dump.ciudades import dump_ciudades (ya existente)
@@ -24,6 +25,8 @@ from pipeline.dump.subcontratos import dump_subcontratos
 from pipeline.dump.eventos import dump_eventos
 from pipeline.dump.ingresos_eventos import dump_ingresos_evento
 from pipeline.dump.tickets import dump_tickets
+from pipeline.dump.cancelaciones import dump_cancelaciones
+from pipeline.dump.evaluaciones_servicio import dump_evaluaciones_servicio
 
 SEED = 42
 TARGET_ROWS = 100_000
@@ -121,6 +124,24 @@ def main():
     ingresos = create_ingresos_evento(eventos, SEED)
     dump_ingresos_evento(ingresos)
     stats["ingresos_evento"] = len(ingresos)
+
+    print("[SEED] Generando cancelaciones...")
+    cancelaciones = create_cancelaciones(
+        eventos,
+        subcontratos,
+        SEED
+    )
+    dump_cancelaciones(cancelaciones)
+    stats["cancelaciones"] = len(cancelaciones)
+
+    print("[SEED] Generando evaluaciones...")
+    evaluaciones = create_evaluaciones_servicio(
+        subcontratos,
+        cancelaciones,
+        SEED
+    )
+    dump_evaluaciones_servicio(evaluaciones)
+    stats["evaluaciones"] = len(evaluaciones)
 
     
     print_stats(stats)
