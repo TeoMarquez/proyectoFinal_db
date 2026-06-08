@@ -16,10 +16,17 @@ def dump_zonas(zonas, filename="zonas.csv"):
     with open(file_path, mode="w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
 
-        writer.writerow(["ciudad_id", "nombre_zona", "codigo_postal", "descripcion"])
+        writer.writerow([
+            "id",
+            "ciudad_id",
+            "nombre_zona",
+            "codigo_postal",
+            "descripcion"
+        ])
 
         for z in zonas:
             writer.writerow([
+                z["id"],
                 z["ciudad_id"],
                 z["nombre_zona"],
                 z["codigo_postal"],
