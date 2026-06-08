@@ -1,3 +1,5 @@
+import argparse
+
 from factories.create_provincias import create_provincias
 from factories.load_ciudades import load_ciudades
 from factories.create_zonas import create_zonas
@@ -14,7 +16,6 @@ from factories.create_cancelaciones import create_cancelaciones
 from factories.create_evaluaciones_servicio import create_evaluaciones_servicio
 
 from pipeline.dump.provincias import dump_provincias
-# from pipeline.dump.ciudades import dump_ciudades (ya existente)
 from pipeline.dump.zonas import dump_zonas
 from pipeline.dump.clientes import dump_clientes
 from pipeline.dump.proveedores import dump_proveedores
@@ -28,11 +29,27 @@ from pipeline.dump.tickets import dump_tickets
 from pipeline.dump.cancelaciones import dump_cancelaciones
 from pipeline.dump.evaluaciones_servicio import dump_evaluaciones_servicio
 
-SEED = 42
+
 TARGET_ROWS = 100_000
 
 
-def print_stats(stats):
+def parse_args():
+
+    parser = argparse.ArgumentParser(
+        description="Generador de dataset EmpresaEventos"
+    )
+
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Seed para generación determinística"
+    )
+
+    return parser.parse_args()
+
+
+def print_stats(stats, seed):
 
     total = sum(stats.values())
 
@@ -40,6 +57,8 @@ def print_stats(stats):
     print("=" * 50)
     print("SEED STATISTICS")
     print("=" * 50)
+    print(f"Seed: {seed}")
+    print()
 
     for table, rows in stats.items():
         print(f"{table:<15} {rows:>10,}")
@@ -56,7 +75,12 @@ def print_stats(stats):
 
 def main():
 
+    args = parse_args()
+    seed = args.seed
+
     stats = {}
+
+    print(f"[SEED] Usando seed={seed}")
 
     print("[SEED] Generando provincias...")
     provincias = create_provincias()
@@ -68,41 +92,41 @@ def main():
     stats["ciudades"] = len(ciudades)
 
     print("[SEED] Generando zonas...")
-    zonas = create_zonas(ciudades, seed=SEED)
+    zonas = create_zonas(ciudades, seed=seed)
     dump_zonas(zonas)
     stats["zonas"] = len(zonas)
 
     print("[SEED] Generando proveedores...")
-    proveedores = create_proveedores(SEED)
+    proveedores = create_proveedores(seed)
     dump_proveedores(proveedores)
     stats["proveedores"] = len(proveedores)
 
     print("[SEED] Generando clientes...")
-    clientes = create_clientes(SEED + 1)
+    clientes = create_clientes(seed + 1)
     dump_clientes(clientes)
     stats["clientes"] = len(clientes)
 
     print("[SEED] Generando servicios...")
-    servicios = create_servicios(zonas, proveedores, SEED)
+    servicios = create_servicios(zonas, proveedores, seed)
     dump_servicios(servicios)
     stats["servicios"] = len(servicios)
 
     print("[SEED] Generando recintos...")
-    recintos = create_recintos(servicios, SEED)
+    recintos = create_recintos(servicios, seed)
     dump_recintos(recintos)
     stats["recintos"] = len(recintos)
 
     print("[SEED] Generando contratos...")
-    contratos = create_contratos(clientes, SEED)
+    contratos = create_contratos(clientes, seed)
     dump_contratos(contratos)
     stats["contratos"] = len(contratos)
-        
+
     print("[SEED] Generando subcontratos...")
     subcontratos = create_subcontratos(
         contratos,
         servicios,
         zonas,
-        SEED
+        seed
     )
     dump_subcontratos(subcontratos)
     stats["subcontratos"] = len(subcontratos)
@@ -110,18 +134,18 @@ def main():
     print("[SEED] Generando eventos...")
     eventos = create_eventos(
         contratos,
-        SEED
+        seed
     )
     dump_eventos(eventos)
     stats["eventos"] = len(eventos)
-    
+
     print("[SEED] Generando tickets...")
-    tickets = create_tickets(eventos, SEED)
+    tickets = create_tickets(eventos, seed)
     dump_tickets(tickets)
     stats["tickets"] = len(tickets)
 
     print("[SEED] Generando ingresos_evento...")
-    ingresos = create_ingresos_evento(eventos, SEED)
+    ingresos = create_ingresos_evento(eventos, seed)
     dump_ingresos_evento(ingresos)
     stats["ingresos_evento"] = len(ingresos)
 
@@ -129,7 +153,7 @@ def main():
     cancelaciones = create_cancelaciones(
         eventos,
         subcontratos,
-        SEED
+        seed
     )
     dump_cancelaciones(cancelaciones)
     stats["cancelaciones"] = len(cancelaciones)
@@ -138,13 +162,13 @@ def main():
     evaluaciones = create_evaluaciones_servicio(
         subcontratos,
         cancelaciones,
-        SEED
+        seed
     )
     dump_evaluaciones_servicio(evaluaciones)
     stats["evaluaciones"] = len(evaluaciones)
 
-    
-    print_stats(stats)
+    print_stats(stats, seed)
+
     print("[SEED] DONE ✔")
 
 
