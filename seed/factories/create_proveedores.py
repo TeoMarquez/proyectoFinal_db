@@ -1,7 +1,7 @@
 from faker import Faker
 import random
 
-from pipeline.generators.cuit import generate_cuit
+from seed.pipeline.generators.cuit import generate_cuit
 
 
 def create_proveedores(seed=None):

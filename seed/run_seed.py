@@ -1,82 +1,38 @@
+from seed.factories.create_provincias import create_provincias
+from seed.factories.load_ciudades import load_ciudades
+from seed.factories.create_zonas import create_zonas
+from seed.factories.create_clientes import create_clientes
+from seed.factories.create_proveedores import create_proveedores
+from seed.factories.create_servicios import create_servicios
+from seed.factories.create_recintos import create_recintos
+from seed.factories.create_contratos import create_contratos
+from seed.factories.create_subcontratos import create_subcontratos
+from seed.factories.create_eventos import create_eventos
+from seed.factories.create_ingresos_evento import create_ingresos_evento
+from seed.factories.create_tickets import create_tickets
+from seed.factories.create_cancelaciones import create_cancelaciones
+from seed.factories.create_evaluaciones_servicio import create_evaluaciones_servicio
+
+from seed.pipeline.dump.provincias import dump_provincias
+from seed.pipeline.dump.zonas import dump_zonas
+from seed.pipeline.dump.clientes import dump_clientes
+from seed.pipeline.dump.proveedores import dump_proveedores
+from seed.pipeline.dump.servicios import dump_servicios
+from seed.pipeline.dump.recintos import dump_recintos
+from seed.pipeline.dump.contratos import dump_contratos
+from seed.pipeline.dump.subcontratos import dump_subcontratos
+from seed.pipeline.dump.eventos import dump_eventos
+from seed.pipeline.dump.ingresos_eventos import dump_ingresos_evento
+from seed.pipeline.dump.tickets import dump_tickets
+from seed.pipeline.dump.cancelaciones import dump_cancelaciones
+from seed.pipeline.dump.evaluaciones_servicio import dump_evaluaciones_servicio
+
 import argparse
-
-from factories.create_provincias import create_provincias
-from factories.load_ciudades import load_ciudades
-from factories.create_zonas import create_zonas
-from factories.create_clientes import create_clientes
-from factories.create_proveedores import create_proveedores
-from factories.create_servicios import create_servicios
-from factories.create_recintos import create_recintos
-from factories.create_contratos import create_contratos
-from factories.create_subcontratos import create_subcontratos
-from factories.create_eventos import create_eventos
-from factories.create_ingresos_evento import create_ingresos_evento
-from factories.create_tickets import create_tickets
-from factories.create_cancelaciones import create_cancelaciones
-from factories.create_evaluaciones_servicio import create_evaluaciones_servicio
-
-from pipeline.dump.provincias import dump_provincias
-from pipeline.dump.zonas import dump_zonas
-from pipeline.dump.clientes import dump_clientes
-from pipeline.dump.proveedores import dump_proveedores
-from pipeline.dump.servicios import dump_servicios
-from pipeline.dump.recintos import dump_recintos
-from pipeline.dump.contratos import dump_contratos
-from pipeline.dump.subcontratos import dump_subcontratos
-from pipeline.dump.eventos import dump_eventos
-from pipeline.dump.ingresos_eventos import dump_ingresos_evento
-from pipeline.dump.tickets import dump_tickets
-from pipeline.dump.cancelaciones import dump_cancelaciones
-from pipeline.dump.evaluaciones_servicio import dump_evaluaciones_servicio
-
 
 TARGET_ROWS = 100_000
 
 
-def parse_args():
-
-    parser = argparse.ArgumentParser(
-        description="Generador de dataset EmpresaEventos"
-    )
-
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="Seed para generación determinística"
-    )
-
-    return parser.parse_args()
-
-
-def print_stats(stats, seed):
-
-    total = sum(stats.values())
-
-    print()
-    print("=" * 50)
-    print("SEED STATISTICS")
-    print("=" * 50)
-    print(f"Seed: {seed}")
-    print()
-
-    for table, rows in stats.items():
-        print(f"{table:<15} {rows:>10,}")
-
-    print("-" * 50)
-    print(f"{'TOTAL':<15} {total:>10,}")
-    print("=" * 50)
-
-    print(f"Objetivo: {TARGET_ROWS:,}")
-    print(f"Actual:   {total:,}")
-    print(f"Progreso: {(total / TARGET_ROWS) * 100:.2f}%")
-    print()
-
-
-def main():
-
-    args = parse_args()
-    seed = args.seed
+def run_seed(seed: int = 42):
 
     stats = {}
 
@@ -122,20 +78,12 @@ def main():
     stats["contratos"] = len(contratos)
 
     print("[SEED] Generando subcontratos...")
-    subcontratos = create_subcontratos(
-        contratos,
-        servicios,
-        zonas,
-        seed
-    )
+    subcontratos = create_subcontratos(contratos, servicios, zonas, seed)
     dump_subcontratos(subcontratos)
     stats["subcontratos"] = len(subcontratos)
 
     print("[SEED] Generando eventos...")
-    eventos = create_eventos(
-        contratos,
-        seed
-    )
+    eventos = create_eventos(contratos, seed)
     dump_eventos(eventos)
     stats["eventos"] = len(eventos)
 
@@ -150,27 +98,45 @@ def main():
     stats["ingresos_evento"] = len(ingresos)
 
     print("[SEED] Generando cancelaciones...")
-    cancelaciones = create_cancelaciones(
-        eventos,
-        subcontratos,
-        seed
-    )
+    cancelaciones = create_cancelaciones(eventos, subcontratos, seed)
     dump_cancelaciones(cancelaciones)
     stats["cancelaciones"] = len(cancelaciones)
 
     print("[SEED] Generando evaluaciones...")
-    evaluaciones = create_evaluaciones_servicio(
-        subcontratos,
-        cancelaciones,
-        seed
-    )
+    evaluaciones = create_evaluaciones_servicio(subcontratos, cancelaciones, seed)
     dump_evaluaciones_servicio(evaluaciones)
     stats["evaluaciones"] = len(evaluaciones)
 
     print_stats(stats, seed)
-
     print("[SEED] DONE ✔")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Seed generator")
+    parser.add_argument("--seed", type=int, default=42)
+    return parser.parse_args()
+
+
+def print_stats(stats, seed):
+    total = sum(stats.values())
+
+    print("\n" + "=" * 50)
+    print("SEED STATISTICS")
+    print("=" * 50)
+    print(f"Seed: {seed}\n")
+
+    for k, v in stats.items():
+        print(f"{k:<15} {v:>10,}")
+
+    print("-" * 50)
+    print(f"{'TOTAL':<15} {total:>10,}")
+    print("=" * 50)
+
+    print(f"Objetivo: {TARGET_ROWS:,}")
+    print(f"Actual:   {total:,}")
+    print(f"Progreso: {(total / TARGET_ROWS) * 100:.2f}%\n")
+
+
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    run_seed(args.seed)
