@@ -72,7 +72,7 @@ Ejecuta:
 2. Seed dataset
 3. Load CSVs (bulk insert)
 
-### 🧹 Reset completo (drop + rebuild)
+### 🧹 Reset completo (drop)
 
 ```bash
 python run.py --del
