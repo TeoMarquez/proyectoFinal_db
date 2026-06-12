@@ -108,7 +108,7 @@ def run_seed(seed: int = 42):
     stats["evaluaciones"] = len(evaluaciones)
 
     print_stats(stats, seed)
-    print("[SEED] DONE ✔")
+    print("[SEED] DONE")
 
 
 def parse_args():
