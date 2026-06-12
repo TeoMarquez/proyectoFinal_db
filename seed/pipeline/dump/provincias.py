@@ -13,9 +13,7 @@ def dump_provincias(provincias, filename="provincias.csv"):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     file_path = DATA_DIR / filename
-
-    print(f"[DUMP] Guardando provincias en: {file_path}")
-
+    
     with open(file_path, mode="w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
 
