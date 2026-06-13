@@ -261,3 +261,55 @@ create view VW_Evento_ganancias
   )AS ranking
   FROM ganancia_total;
 GO
+
+CREATE VIEW VW_Eventos_No_Realizados
+AS
+WITH total_eventos AS
+(
+    SELECT COUNT(*) AS total
+    FROM evento
+),
+cancelaciones_categoria AS
+(
+    SELECT
+        ISNULL(servicio.categoria, 'Causa externa') AS causa,
+        COUNT(DISTINCT evento.id) AS eventos_cancelados
+    FROM evento
+
+    JOIN cancelacion
+    ON evento.id = cancelacion.evento_id
+
+    LEFT JOIN subcontrato
+    ON cancelacion.subcontrato_id = subcontrato.id
+
+    LEFT JOIN servicio
+    ON subcontrato.servicio_id = servicio.id
+
+    WHERE evento.estado = 'Cancelado'
+
+    GROUP BY ISNULL(servicio.categoria, 'Causa externa')
+)
+SELECT
+    causa,
+    eventos_cancelados,
+    CAST(
+        100.0 * eventos_cancelados / total_eventos.total
+        AS DECIMAL(5,2)
+    ) AS porcentaje_sobre_total
+FROM cancelaciones_categoria
+CROSS JOIN total_eventos;
+GO
+
+CREATE VIEW VW_Estado_Eventos
+AS
+SELECT
+    evento.id,
+    evento.nombre,
+    contrato.tipo_evento,
+    evento.fecha_real,
+    evento.estado
+FROM evento
+
+JOIN contrato
+ON evento.contrato_id = contrato.id;
+GO
