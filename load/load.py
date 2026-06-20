@@ -9,20 +9,20 @@ DATA_DIR = PROJECT_ROOT / "seed" / "data"
 LOGS_DIR = PROJECT_ROOT / "logs"
 
 TABLES = [
-    ("cliente",              "clientes.csv"),
-    ("proveedor",            "proveedores.csv"),
-    ("provincias",           "provincias.csv"),
-    ("ciudad",               "ciudades.csv"),
-    ("zona",                 "zonas.csv"),
-    ("servicio",             "servicios.csv"),
-    ("recinto",              "recintos.csv"),
-    ("contrato",             "contratos.csv"),
-    ("subcontrato",          "subcontratos.csv"),
-    ("evento",               "eventos.csv"),
-    ("ticket",               "tickets.csv"),
-    ("ingresos_evento",      "ingresos_evento.csv"),
-    ("cancelacion",          "cancelaciones.csv"),
-    ("evaluacion_servicio",  "evaluaciones_servicio.csv"),
+    ("Clientes",              "clientes.csv"),
+    ("Proveedores",            "proveedores.csv"),
+    ("Provincias",           "provincias.csv"),
+    ("Ciudades",               "ciudades.csv"),
+    ("Zonas",                 "zonas.csv"),
+    ("Servicios",             "servicios.csv"),
+    ("Recintos",              "recintos.csv"),
+    ("Contratos",             "contratos.csv"),
+    ("Subcontratos",          "subcontratos.csv"),
+    ("Eventos",               "eventos.csv"),
+    ("Tickets",               "tickets.csv"),
+    ("IngresosEventos",      "ingresos_evento.csv"),
+    ("Cancelaciones",          "cancelaciones.csv"),
+    ("EvaluacionesServicios",  "evaluaciones_servicio.csv"),
 ]
 
 
