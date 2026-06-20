@@ -1,127 +1,129 @@
-CREATE PROCEDURE SP_Evento_entre_fechas
-   @fecha_inicio DATE,
-   @fecha_final DATE
+CREATE PROCEDURE SP_EventosEntreFechas
+    @FechaInicio DATE,
+    @FechaFinal DATE
 AS
 BEGIN
-  SELECT
-  nombre,
-  fecha_real,
-  estado,
-  cantidad_asistentes
-  FROM evento
-
-  WHERE fecha_real BETWEEN @fecha_inicio AND @fecha_final;
-END;
-GO
-
-CREATE PROCEDURE SP_Evento_tipo
-  @tipo_evento VARCHAR(80)
-AS
-BEGIN
-  SELECT
-  evento.nombre,
-  evento.fecha_real,
-  evento.estado,
-  evento.cantidad_asistentes,
-  contrato.tipo_evento
-  FROM evento
-
-  JOIN contrato
-  ON evento.contrato_id = contrato.id
-
-  WHERE contrato.tipo_evento = @tipo_evento;
-END;
-GO
-
-CREATE PROCEDURE SP_Buscar_cliente
-  @nombre VARCHAR(50)
-AS
-BEGIN
-  SELECT *
-  FROM cliente
-  WHERE nombre LIKE '%' + @nombre + '%'
+    SELECT
+        Nombre,
+        FechaReal,
+        Estado,
+        CantidadAsistentes
+    FROM Eventos
+    WHERE FechaReal BETWEEN @FechaInicio AND @FechaFinal;
 END;
 GO
 
 
-CREATE PROCEDURE SP_Evento_provincia
-  @provincia VARCHAR(50)
+CREATE PROCEDURE SP_EventosTipo
+    @TipoEvento VARCHAR(80)
 AS
 BEGIN
-  SELECT
-  evento.nombre,
-  evento.fecha_real,
-  evento.estado,
-  evento.cantidad_asistentes,
-  provincia.nombre
-  FROM evento
+    SELECT
+        Eventos.Nombre,
+        Eventos.FechaReal,
+        Eventos.Estado,
+        Eventos.CantidadAsistentes,
+        Contratos.TipoEvento
+    FROM Eventos
 
-  JOIN contrato
-  ON evento.contrato_id = contrato.id
+    JOIN Contratos
+        ON Eventos.IdContrato = Contratos.IdContrato
 
-  JOIN subcontrato
-  ON contrato.id = subcontrato.contrato_id
-
-  JOIN servicio
-  ON subcontrato.servicio_id = servicio.id
-
-  JOIN zona
-  ON servicio.zona_id = zona.id
-
-  JOIN ciudad
-  ON zona.ciudad_id = ciudad.id
-
-  JOIN provincia
-  ON ciudad.provincia_id = provincias.id
-
-  WHERE provincia.nombre = @provincia;
-END;
-GO  
-
-CREATE PROCEDURE SP_Evento_recinto
-  @recinto VARCHAR(50)
-AS
-BEGIN
-  SELECT
-  evento.nombre,
-  evento.fecha_real,
-  evento.estado,
-  evento.cantidad_asistentes,
-  recinto.nombre AS recinto
-  FROM evento
-
-  JOIN contrato
-  ON evento.contrato_id = contrato.id
-
-  JOIN subcontrato
-  ON contrato.id = subcontrato.contrato_id
-
-  JOIN servicio
-  ON subcontrato.servicio_id = servicio.id
-
-  JOIN recinto
-  ON servicio.id = recinto.servicio_id
-
-  WHERE recinto.nombre = @recinto;
+    WHERE Contratos.TipoEvento = @TipoEvento;
 END;
 GO
 
 
-CREATE PROCEDURE SP_Proveedor_categoria
-  @categoria VARCHAR(100)
+CREATE PROCEDURE SP_BuscarClientes
+    @Nombre VARCHAR(50)
 AS
 BEGIN
-  SELECT
-  proveedor.nombre,
-  proveedor.cuit,
-  proveedor.telefono,
-  proveedor.email,
-  servicio.categoria AS categoria
-  FROM proveedor
+    SELECT *
+    FROM Clientes
+    WHERE Nombre LIKE '%' + @Nombre + '%';
+END;
+GO
 
-  JOIN servicio
-  ON proveedor.id = servicio.proveedor_id
 
-  WHERE servicio.categoria = @categoria;
+CREATE PROCEDURE SP_EventosProvincia
+    @Provincia VARCHAR(50)
+AS
+BEGIN
+    SELECT
+        Eventos.Nombre,
+        Eventos.FechaReal,
+        Eventos.Estado,
+        Eventos.CantidadAsistentes,
+        Provincias.Nombre AS Provincia
+    FROM Eventos
+
+    JOIN Contratos
+        ON Eventos.IdContrato = Contratos.IdContrato
+
+    JOIN Subcontratos
+        ON Contratos.IdContrato = Subcontratos.IdContrato
+
+    JOIN Servicios
+        ON Subcontratos.IdServicio = Servicios.IdServicio
+
+    JOIN Zonas
+        ON Servicios.IdZona = Zonas.IdZona
+
+    JOIN Ciudades
+        ON Zonas.IdCiudad = Ciudades.IdCiudad
+
+    JOIN Provincias
+        ON Ciudades.IdProvincia = Provincias.IdProvincia
+
+    WHERE Provincias.Nombre = @Provincia;
+END;
+GO
+
+
+CREATE PROCEDURE SP_EventosRecinto
+    @Recinto VARCHAR(80)
+AS
+BEGIN
+    SELECT
+        Eventos.Nombre,
+        Eventos.FechaReal,
+        Eventos.Estado,
+        Eventos.CantidadAsistentes,
+        Recintos.Nombre AS Recinto
+    FROM Eventos
+
+    JOIN Contratos
+        ON Eventos.IdContrato = Contratos.IdContrato
+
+    JOIN Subcontratos
+        ON Contratos.IdContrato = Subcontratos.IdContrato
+
+    JOIN Servicios
+        ON Subcontratos.IdServicio = Servicios.IdServicio
+
+    JOIN Recintos
+        ON Servicios.IdServicio = Recintos.IdServicio
+
+    WHERE Recintos.Nombre = @Recinto;
+END;
+GO
+
+
+CREATE PROCEDURE SP_ProveedoresCategoria
+    @Categoria VARCHAR(100)
+AS
+BEGIN
+    SELECT
+        Proveedores.Nombre,
+        Proveedores.Cuit,
+        Proveedores.Telefono,
+        Proveedores.Email,
+        Servicios.Categoria
+    FROM Proveedores
+
+    JOIN Servicios
+        ON Proveedores.IdProveedor = Servicios.IdProveedor
+
+    WHERE Servicios.Categoria = @Categoria;
 END;
 GO

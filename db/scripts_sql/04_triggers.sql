@@ -1,38 +1,50 @@
-CREATE TRIGGER TR_Subcontrato_UbicacionConsistente
-ON subcontrato
+CREATE TRIGGER TR_SubcontratosUbicacionConsistente
+ON Subcontratos
 AFTER INSERT, UPDATE
 AS
 BEGIN
-    IF EXISTS (
+    IF EXISTS
+    (
         SELECT 1
-        FROM subcontrato s
-        JOIN servicio sv ON s.servicio_id = sv.id
-        GROUP BY s.contrato_id
-        HAVING COUNT(DISTINCT sv.zona_id) > 1
+        FROM Subcontratos S
+        JOIN Servicios Sv
+            ON S.IdServicio = Sv.IdServicio
+        GROUP BY S.IdContrato
+        HAVING COUNT(DISTINCT Sv.IdZona) > 1
     )
     BEGIN
-        RAISERROR (
+        RAISERROR(
             'Todos los subcontratos de un contrato deben pertenecer a la misma ciudad/provincia.',
-            16, 1
+            16,
+            1
         );
+
         ROLLBACK TRANSACTION;
     END
 END;
 GO
 
-CREATE TRIGGER TR_Subcontrato_FechaFirma
-ON subcontrato
+
+CREATE TRIGGER TR_SubcontratosFechaFirma
+ON Subcontratos
 AFTER INSERT, UPDATE
 AS
 BEGIN
-    IF EXISTS (
+    IF EXISTS
+    (
         SELECT 1
-        FROM inserted i
-        JOIN contrato c ON i.contrato_id = c.id
-        WHERE i.fecha_firma < c.fecha_firma
+        FROM Inserted I
+        JOIN Contratos C
+            ON I.IdContrato = C.IdContrato
+        WHERE I.FechaFirma < C.FechaFirma
     )
     BEGIN
-        RAISERROR ('La fecha del subcontrato no puede ser anterior a la del contrato.', 16, 1);
+        RAISERROR(
+            'La fecha del subcontrato no puede ser anterior a la del contrato.',
+            16,
+            1
+        );
+
         ROLLBACK TRANSACTION;
     END
 END;

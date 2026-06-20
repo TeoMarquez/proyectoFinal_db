@@ -1,315 +1,333 @@
-create view VW_Contrataciones_mes 
-  AS
-  SELECT 
-    MONTH(fecha_firma) AS mes,
-    COUNT(*) AS cantidad_contratos
-  FROM contrato
-  GROUP BY MONTH(fecha_firma);
-GO
-
-
-create view VW_Cancelacion_proveedor
-  AS
-
-  SELECT 
-  proveedor.nombre,
-    COUNT(*) AS cantidad_cancelaciones
-  FROM cancelacion
-
-  JOIN subcontrato
-  ON cancelacion.subcontrato_id = subcontrato.id
-
-  JOIN  servicio
-  ON subcontrato.servicio_id = servicio.id
-
-  JOIN proveedor
-  ON servicio.proveedor_id = proveedor.id
-  GROUP BY proveedor.nombre;
-GO
-
-
-create view VW_Proveedor_rendimiento
-  AS
-  SELECT
-    proveedor,
-    relacion,
-    RANK() OVER(
-      ORDER BY relacion DESC
-    ) AS ranking
-  FROM (
-  SELECT 
-    proveedor.nombre AS proveedor,
-    (AVG(evaluacion_servicio.calificacion_costo)
-    +
-    AVG(evaluacion_servicio.calificacion_rendimiento))/2 AS relacion
-  FROM proveedor
-
-  JOIN servicio
-  ON proveedor.id = servicio.proveedor_id
-
-  JOIN subcontrato
-  ON servicio.id = subcontrato.servicio_id
-
-  JOIN evaluacion_servicio
-  ON subcontrato.id = evaluacion_servicio.subcontrato_id
-  GROUP BY proveedor.nombre
-  ) AS datos;
-GO
-
-
-create view VW_Provincias_evento
-  AS
-  SELECT
-    provincia,
-    cantidad_eventos,
-    RANK() OVER(
-      ORDER BY cantidad_eventos DESC
-    ) as ranking
-  FROM (
-  SELECT 
-    provincias.nombre AS provincia,
-    count(DISTINCT evento.id) AS cantidad_eventos
-  FROM evento
-
-  JOIN contrato
-  ON evento.contrato_id = contrato.id
-
-  JOIN subcontrato
-  ON contrato.id = subcontrato.contrato_id
-
-  JOIN servicio
-  ON subcontrato.servicio_id = servicio.id
-
-  JOIN zona
-  ON servicio.zona_id = zona.id
-
-  JOIN ciudad
-  ON zona.ciudad_id = ciudad.id
-
-  JOIN provincias
-  ON ciudad.provincia_id = provincias.id
-
-  GROUP BY provincias.nombre
-  ) AS cantidad;
-GO
-
-
-create view VW_Proveedores_Contrataciones
-  AS
-  SELECT
-    proveedor,
-    cantidad,
-    RANK() OVER(
-      ORDER BY cantidad DESC
-    )AS ranking
-  FROM (
-  SELECT
-    proveedor.nombre as proveedor,
-    count(subcontrato.id) as cantidad
-  FROM subcontrato
-
-  JOIN servicio
-  ON subcontrato.servicio_id = servicio.id
-
-  JOIN proveedor
-  ON servicio.proveedor_id = proveedor.id
-  GROUP BY proveedor.nombre
-  ) AS contrataciones;
-GO
-
-
-create view VW_Clientes_Ingreso
-  AS
-  WITH ingresos_ticket AS
-  (
-    SELECT
-    evento_id,
-    SUM(precio * cantidad_vendida) AS ticket_total
-    FROM ticket
-    GROUP BY evento_id
-  ),
-  total_ingresos_evento AS
-  (
-    SELECT
-    evento_id,
-    SUM(monto) AS total_ingresos_evento
-    FROM ingresos_evento
-    GROUP BY evento_id
-  )
-  SELECT
-    cliente,
-    ingreso,
-    RANK() OVER(
-      ORDER BY ingreso DESC
-    )AS ranking
-  FROM (
-  SELECT
-  cliente.nombre AS cliente,
-  SUM( contrato.presupuesto_acordado
-    +
-    ISNULL(total_ingresos_evento.total_ingresos_evento,0)
-    +
-    ISNULL(ingresos_ticket.ticket_total,0)
-  ) AS ingreso
-  FROM cliente
-
-  LEFT JOIN contrato
-  ON cliente.id = contrato.cliente_id
-
-  LEFT JOIN evento
-  ON contrato.id = evento.contrato_id
-
-  LEFT JOIN ingresos_ticket
-  ON evento.id = ingresos_ticket.evento_id
-
-  LEFT JOIN total_ingresos_evento
-  ON evento.id = total_ingresos_evento.evento_id
-  GROUP BY cliente.id, cliente.nombre
-  ) AS ingresos;
-GO
-
-
-
-create view VW_Evento_asistencia
-  AS
-  SELECT
-  tipo,
-  cantidad_asistencias,
-  RANK() OVER(
-    ORDER BY cantidad_asistencias DESC
-  )AS ranking
-  FROM (
-  SELECT
-  contrato.tipo_evento AS tipo,
-  SUM(evento.cantidad_asistentes) AS cantidad_asistencias
-  FROM contrato
-  JOIN evento
-  ON contrato.id = evento.contrato_id
-  GROUP BY contrato.tipo_evento
-  ) AS tipo_evento;
-GO
-
-
-create view VW_Evento_ganancias
-  AS
-
-    WITH ingresos_ticket AS
-  (
-    SELECT
-    evento_id,
-    SUM(precio * cantidad_vendida) AS ticket_total
-    FROM ticket
-    GROUP BY evento_id
-  ),
-  total_ingresos_evento AS
-  (
-    SELECT
-    evento_id,
-    SUM(monto) AS total_ingresos_evento
-    FROM ingresos_evento
-    GROUP BY evento_id
-  ),
-  ingresos_total AS
-  (
-  SELECT
-  contrato.tipo_evento AS tipo_evento,
-  SUM(contrato.presupuesto_acordado
-    +
-    ISNULL(total_ingresos_evento.total_ingresos_evento,0)
-    +
-    ISNULL(ingresos_ticket.ticket_total,0)
-  ) AS ingreso 
-    FROM contrato
-
-    LEFT JOIN evento
-    ON contrato.id = evento.contrato_id
-
-    LEFT JOIN ingresos_ticket
-    ON evento.id = ingresos_ticket.evento_id
-
-    LEFT JOIN total_ingresos_evento
-    ON evento.id = total_ingresos_evento.evento_id
-    group by contrato.tipo_evento
-  ),
-  costo_total AS
-  (
-    SELECT
-    contrato.tipo_evento AS tipo_evento,
-    SUM(subcontrato.costo)AS costo
-    FROM contrato
-
-    JOIN subcontrato
-    ON contrato.id = subcontrato.contrato_id
-    GROUP BY contrato.tipo_evento
-  ),
-  ganancia_total AS
-  (
-    SELECT
-    ingresos_total.tipo_evento AS tipo_evento,
-    ingresos_total.ingreso - costo_total.costo AS ganancia
-    FROM ingresos_total
-
-    JOIN costo_total
-    ON ingresos_total.tipo_evento = costo_total.tipo_evento
-  )
-
-  SELECT
-  tipo_evento,
-  ganancia,
-  RANK() OVER(
-    ORDER BY ganancia DESC
-  )AS ranking
-  FROM ganancia_total;
-GO
-
-CREATE VIEW VW_Eventos_No_Realizados
+CREATE VIEW VW_ContratacionesMes
 AS
-WITH total_eventos AS
+SELECT
+    MONTH(FechaFirma) AS Mes,
+    COUNT(*) AS CantidadContratos
+FROM Contratos
+GROUP BY MONTH(FechaFirma);
+GO
+
+
+CREATE VIEW VW_CancelacionesProveedores
+AS
+SELECT
+    Proveedores.Nombre AS Proveedor,
+    COUNT(*) AS CantidadCancelaciones
+FROM Cancelaciones
+
+JOIN Subcontratos
+    ON Cancelaciones.IdSubcontrato = Subcontratos.IdSubcontrato
+
+JOIN Servicios
+    ON Subcontratos.IdServicio = Servicios.IdServicio
+
+JOIN Proveedores
+    ON Servicios.IdProveedor = Proveedores.IdProveedor
+
+GROUP BY Proveedores.Nombre;
+GO
+
+
+CREATE VIEW VW_RendimientoProveedores
+AS
+SELECT
+    Proveedor,
+    Relacion,
+    RANK() OVER (
+        ORDER BY Relacion DESC
+    ) AS Ranking
+FROM
 (
-    SELECT COUNT(*) AS total
-    FROM evento
+    SELECT
+        Proveedores.Nombre AS Proveedor,
+        (
+            AVG(EvaluacionesServicios.CalificacionCosto)
+            +
+            AVG(EvaluacionesServicios.CalificacionRendimiento)
+        ) / 2.0 AS Relacion
+    FROM Proveedores
+
+    JOIN Servicios
+        ON Proveedores.IdProveedor = Servicios.IdProveedor
+
+    JOIN Subcontratos
+        ON Servicios.IdServicio = Subcontratos.IdServicio
+
+    JOIN EvaluacionesServicios
+        ON Subcontratos.IdSubcontrato = EvaluacionesServicios.IdSubcontrato
+
+    GROUP BY Proveedores.Nombre
+) AS Datos;
+GO
+
+
+CREATE VIEW VW_EventosProvincias
+AS
+SELECT
+    Provincia,
+    CantidadEventos,
+    RANK() OVER (
+        ORDER BY CantidadEventos DESC
+    ) AS Ranking
+FROM
+(
+    SELECT
+        Provincias.Nombre AS Provincia,
+        COUNT(DISTINCT Eventos.IdEvento) AS CantidadEventos
+    FROM Eventos
+
+    JOIN Contratos
+        ON Eventos.IdContrato = Contratos.IdContrato
+
+    JOIN Subcontratos
+        ON Contratos.IdContrato = Subcontratos.IdContrato
+
+    JOIN Servicios
+        ON Subcontratos.IdServicio = Servicios.IdServicio
+
+    JOIN Zonas
+        ON Servicios.IdZona = Zonas.IdZona
+
+    JOIN Ciudades
+        ON Zonas.IdCiudad = Ciudades.IdCiudad
+
+    JOIN Provincias
+        ON Ciudades.IdProvincia = Provincias.IdProvincia
+
+    GROUP BY Provincias.Nombre
+) AS Cantidades;
+GO
+
+
+CREATE VIEW VW_ContratacionesProveedores
+AS
+SELECT
+    Proveedor,
+    Cantidad,
+    RANK() OVER (
+        ORDER BY Cantidad DESC
+    ) AS Ranking
+FROM
+(
+    SELECT
+        Proveedores.Nombre AS Proveedor,
+        COUNT(Subcontratos.IdSubcontrato) AS Cantidad
+    FROM Subcontratos
+
+    JOIN Servicios
+        ON Subcontratos.IdServicio = Servicios.IdServicio
+
+    JOIN Proveedores
+        ON Servicios.IdProveedor = Proveedores.IdProveedor
+
+    GROUP BY Proveedores.Nombre
+) AS Contrataciones;
+GO
+
+
+CREATE VIEW VW_IngresosClientes
+AS
+WITH IngresosTicket AS
+(
+    SELECT
+        IdEvento,
+        SUM(Precio * CantidadVendida) AS TicketTotal
+    FROM Tickets
+    GROUP BY IdEvento
 ),
-cancelaciones_categoria AS
+TotalIngresosEvento AS
 (
     SELECT
-        ISNULL(servicio.categoria, 'Causa externa') AS causa,
-        COUNT(DISTINCT evento.id) AS eventos_cancelados
-    FROM evento
-
-    JOIN cancelacion
-    ON evento.id = cancelacion.evento_id
-
-    LEFT JOIN subcontrato
-    ON cancelacion.subcontrato_id = subcontrato.id
-
-    LEFT JOIN servicio
-    ON subcontrato.servicio_id = servicio.id
-
-    WHERE evento.estado = 'Cancelado'
-
-    GROUP BY ISNULL(servicio.categoria, 'Causa externa')
+        IdEvento,
+        SUM(Monto) AS TotalIngresosEvento
+    FROM IngresosEventos
+    GROUP BY IdEvento
 )
+
 SELECT
-    causa,
-    eventos_cancelados,
-    CAST(
-        100.0 * eventos_cancelados / total_eventos.total
-        AS DECIMAL(5,2)
-    ) AS porcentaje_sobre_total
-FROM cancelaciones_categoria
-CROSS JOIN total_eventos;
+    Cliente,
+    Ingreso,
+    RANK() OVER (
+        ORDER BY Ingreso DESC
+    ) AS Ranking
+FROM
+(
+    SELECT
+        Clientes.Nombre AS Cliente,
+        SUM(
+            Contratos.PresupuestoAcordado
+            +
+            ISNULL(TotalIngresosEvento.TotalIngresosEvento, 0)
+            +
+            ISNULL(IngresosTicket.TicketTotal, 0)
+        ) AS Ingreso
+    FROM Clientes
+
+    LEFT JOIN Contratos
+        ON Clientes.IdCliente = Contratos.IdCliente
+
+    LEFT JOIN Eventos
+        ON Contratos.IdContrato = Eventos.IdContrato
+
+    LEFT JOIN IngresosTicket
+        ON Eventos.IdEvento = IngresosTicket.IdEvento
+
+    LEFT JOIN TotalIngresosEvento
+        ON Eventos.IdEvento = TotalIngresosEvento.IdEvento
+
+    GROUP BY Clientes.IdCliente, Clientes.Nombre
+) AS Ingresos;
 GO
 
-CREATE VIEW VW_Estado_Eventos
+
+CREATE VIEW VW_AsistenciaEventos
 AS
 SELECT
-    evento.id,
-    evento.nombre,
-    contrato.tipo_evento,
-    evento.fecha_real,
-    evento.estado
-FROM evento
+    Tipo,
+    CantidadAsistencias,
+    RANK() OVER (
+        ORDER BY CantidadAsistencias DESC
+    ) AS Ranking
+FROM
+(
+    SELECT
+        Contratos.TipoEvento AS Tipo,
+        SUM(Eventos.CantidadAsistentes) AS CantidadAsistencias
+    FROM Contratos
 
-JOIN contrato
-ON evento.contrato_id = contrato.id;
+    JOIN Eventos
+        ON Contratos.IdContrato = Eventos.IdContrato
+
+    GROUP BY Contratos.TipoEvento
+) AS TiposEvento;
+GO
+
+
+CREATE VIEW VW_GananciasEventos
+AS
+WITH IngresosTicket AS
+(
+    SELECT
+        IdEvento,
+        SUM(Precio * CantidadVendida) AS TicketTotal
+    FROM Tickets
+    GROUP BY IdEvento
+),
+TotalIngresosEvento AS
+(
+    SELECT
+        IdEvento,
+        SUM(Monto) AS TotalIngresosEvento
+    FROM IngresosEventos
+    GROUP BY IdEvento
+),
+IngresosTotales AS
+(
+    SELECT
+        Contratos.TipoEvento,
+        SUM(
+            Contratos.PresupuestoAcordado
+            +
+            ISNULL(TotalIngresosEvento.TotalIngresosEvento, 0)
+            +
+            ISNULL(IngresosTicket.TicketTotal, 0)
+        ) AS Ingreso
+    FROM Contratos
+
+    LEFT JOIN Eventos
+        ON Contratos.IdContrato = Eventos.IdContrato
+
+    LEFT JOIN IngresosTicket
+        ON Eventos.IdEvento = IngresosTicket.IdEvento
+
+    LEFT JOIN TotalIngresosEvento
+        ON Eventos.IdEvento = TotalIngresosEvento.IdEvento
+
+    GROUP BY Contratos.TipoEvento
+),
+CostosTotales AS
+(
+    SELECT
+        Contratos.TipoEvento,
+        SUM(Subcontratos.Costo) AS Costo
+    FROM Contratos
+
+    JOIN Subcontratos
+        ON Contratos.IdContrato = Subcontratos.IdContrato
+
+    GROUP BY Contratos.TipoEvento
+),
+GananciasTotales AS
+(
+    SELECT
+        IngresosTotales.TipoEvento,
+        IngresosTotales.Ingreso - CostosTotales.Costo AS Ganancia
+    FROM IngresosTotales
+
+    JOIN CostosTotales
+        ON IngresosTotales.TipoEvento = CostosTotales.TipoEvento
+)
+
+SELECT
+    TipoEvento,
+    Ganancia,
+    RANK() OVER (
+        ORDER BY Ganancia DESC
+    ) AS Ranking
+FROM GananciasTotales;
+GO
+
+
+CREATE VIEW VW_EventosNoRealizados
+AS
+WITH TotalEventos AS
+(
+    SELECT COUNT(*) AS Total
+    FROM Eventos
+),
+CancelacionesCategoria AS
+(
+    SELECT
+        ISNULL(Servicios.Categoria, 'Causa externa') AS Causa,
+        COUNT(DISTINCT Eventos.IdEvento) AS EventosCancelados
+    FROM Eventos
+
+    JOIN Cancelaciones
+        ON Eventos.IdEvento = Cancelaciones.IdEvento
+
+    LEFT JOIN Subcontratos
+        ON Cancelaciones.IdSubcontrato = Subcontratos.IdSubcontrato
+
+    LEFT JOIN Servicios
+        ON Subcontratos.IdServicio = Servicios.IdServicio
+
+    WHERE Eventos.Estado = 'Cancelado'
+
+    GROUP BY ISNULL(Servicios.Categoria, 'Causa externa')
+)
+
+SELECT
+    Causa,
+    EventosCancelados,
+    CAST(
+        100.0 * EventosCancelados / TotalEventos.Total
+        AS DECIMAL(5,2)
+    ) AS PorcentajeSobreTotal
+FROM CancelacionesCategoria
+CROSS JOIN TotalEventos;
+GO
+
+
+CREATE VIEW VW_EstadoEventos
+AS
+SELECT
+    Eventos.IdEvento,
+    Eventos.Nombre,
+    Contratos.TipoEvento,
+    Eventos.FechaReal,
+    Eventos.Estado
+FROM Eventos
+
+JOIN Contratos
+    ON Eventos.IdContrato = Contratos.IdContrato;
 GO
