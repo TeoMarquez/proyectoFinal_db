@@ -299,19 +299,6 @@ WHERE Eventos.Estado = 'Cancelado'
 GROUP BY Servicios.Categoria;
 GO
 
-
-SELECT
-    Causa,
-    EventosCancelados,
-    CAST(
-        100.0 * EventosCancelados / TotalEventos.Total
-        AS DECIMAL(5,2)
-    ) AS PorcentajeSobreTotal
-FROM CancelacionesCategoria
-CROSS JOIN TotalEventos;
-GO
-
-
 CREATE VIEW VW_EstadoEventos
 AS
 SELECT
