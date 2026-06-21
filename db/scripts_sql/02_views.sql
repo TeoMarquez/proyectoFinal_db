@@ -280,31 +280,25 @@ GO
 
 CREATE VIEW VW_EventosNoRealizados
 AS
-WITH TotalEventos AS
-(
-    SELECT COUNT(*) AS Total
-    FROM Eventos
-),
-CancelacionesCategoria AS
-(
-    SELECT
-        ISNULL(Servicios.Categoria, 'Causa externa') AS Causa,
-        COUNT(DISTINCT Eventos.IdEvento) AS EventosCancelados
-    FROM Eventos
+SELECT
+    Servicios.Categoria,
+    COUNT(DISTINCT Eventos.IdEvento) AS EventosCancelados
+FROM Eventos
 
-    JOIN Cancelaciones
-        ON Eventos.IdEvento = Cancelaciones.IdEvento
+JOIN Cancelaciones
+    ON Eventos.IdEvento = Cancelaciones.IdEvento
 
-    LEFT JOIN Subcontratos
-        ON Cancelaciones.IdSubcontrato = Subcontratos.IdSubcontrato
+JOIN Subcontratos
+    ON Cancelaciones.IdSubcontrato = Subcontratos.IdSubcontrato
 
-    LEFT JOIN Servicios
-        ON Subcontratos.IdServicio = Servicios.IdServicio
+JOIN Servicios
+    ON Subcontratos.IdServicio = Servicios.IdServicio
 
-    WHERE Eventos.Estado = 'Cancelado'
+WHERE Eventos.Estado = 'Cancelado'
 
-    GROUP BY ISNULL(Servicios.Categoria, 'Causa externa')
-)
+GROUP BY Servicios.Categoria;
+GO
+
 
 SELECT
     Causa,
