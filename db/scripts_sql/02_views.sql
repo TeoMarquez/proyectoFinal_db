@@ -93,7 +93,7 @@ FROM
 
     JOIN Provincias
         ON Ciudades.IdProvincia = Provincias.IdProvincia
-
+    WHERE Eventos.Estado = 'Exitoso'
     GROUP BY Provincias.Nombre
 ) AS Cantidades;
 GO
