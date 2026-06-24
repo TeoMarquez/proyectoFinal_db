@@ -42,8 +42,8 @@ def create_evaluaciones_servicio(
             evaluaciones.append({
                 "id": next_id,
                 "subcontrato_id": sub["id"],
-                "calificacion_rendimiento": rng.randint(0, 3),
-                "calificacion_costo": rng.randint(0, 10),
+                "calificacion_rendimiento": rng.randint(1, 3),
+                "calificacion_costo": rng.randint(1, 10),
                 "comentario": rng.choice(COMENTARIOS_NEGATIVOS)
             })
 
@@ -58,7 +58,7 @@ def create_evaluaciones_servicio(
             "id": next_id,
             "subcontrato_id": sub["id"],
             "calificacion_rendimiento": rng.randint(5, 10),
-            "calificacion_costo": rng.randint(0, 10),
+            "calificacion_costo": rng.randint(1, 10),
             "comentario": rng.choice(COMENTARIOS_POSITIVOS)
         })
 
