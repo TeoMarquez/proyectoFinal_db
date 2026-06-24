@@ -38,7 +38,11 @@ CREATE PROCEDURE SP_BuscarClientes
     @Nombre VARCHAR(50)
 AS
 BEGIN
-    SELECT *
+    SELECT IdCliente,
+        Nombre,
+        Cuit,
+        Email,
+        Telefono
     FROM Clientes
     WHERE Nombre LIKE '%' + @Nombre + '%';
 END;
