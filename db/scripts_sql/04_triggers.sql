@@ -9,6 +9,11 @@ BEGIN
         FROM Subcontratos S
         JOIN Servicios Sv
             ON S.IdServicio = Sv.IdServicio
+        WHERE S.IdContrato IN
+        (
+            SELECT DISTINCT IdContrato
+            FROM Inserted
+        )
         GROUP BY S.IdContrato
         HAVING COUNT(DISTINCT Sv.IdZona) > 1
     )
