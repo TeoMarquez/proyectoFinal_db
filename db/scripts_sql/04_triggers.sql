@@ -9,17 +9,19 @@ BEGIN
         FROM Subcontratos S
         JOIN Servicios Sv
             ON S.IdServicio = Sv.IdServicio
+        JOIN Zonas Z
+            ON Sv.IdZona = Z.IdZona
         WHERE S.IdContrato IN
         (
             SELECT DISTINCT IdContrato
             FROM Inserted
         )
         GROUP BY S.IdContrato
-        HAVING COUNT(DISTINCT Sv.IdZona) > 1
+        HAVING COUNT(DISTINCT Z.IdCiudad) > 1
     )
     BEGIN
         RAISERROR(
-            'Todos los subcontratos de un contrato deben pertenecer a la misma ciudad/provincia.',
+            'Todos los subcontratos de un contrato deben pertenecer a la misma ciudad.',
             16,
             1
         );
