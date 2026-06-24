@@ -16,7 +16,7 @@ def create_ingresos_evento(eventos, seed=None):
 
     for evento in eventos:
 
-        cantidad = rng.randint(1, 4)
+        cantidad = rng.randint(1, 3)
 
         tipos = rng.sample(
             TIPOS_INGRESO,
