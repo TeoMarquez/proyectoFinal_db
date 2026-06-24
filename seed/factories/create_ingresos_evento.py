@@ -1,7 +1,6 @@
 import random
 
 TIPOS_INGRESO = [
-    "Entradas",
     "Patrocinio",
     "Merchandising",
     "Buffet"
